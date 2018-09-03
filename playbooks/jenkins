@@ -13,12 +13,23 @@
 - name: Enable nginx
   hosts: jenkins
   tasks:
+    - name: Check to see if nginx repo is enabled
+      shell: amazon-linux-extras list | egrep -q 'nginx.* enabled'
+      register: nginx_repo_enabled_shell
+      failed_when: ( nginx_repo_enabled_shell.rc not in [ 0, 1 ] )
+      changed_when: ( nginx_repo_enabled_shell.rc not in [ 0, 1 ] )
+
     - name: Enable nginx repo from amazon-linux-extras
       shell: "amazon-linux-extras enable nginx1.12"
       become: yes
-    - name: Install nginx rpm
-      yum: name=nginx
+      when: nginx_repo_enabled_shell.rc != 0
+
+    - name: Make sure that nginx package is installed
       become: yes
+      yum:
+        name: nginx
+        state: latest
+
     - name: Enable nginx service
       service: name=nginx state=started enabled=true
       become: yes
