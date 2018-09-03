@@ -1,0 +1,24 @@
+- hosts: jenkins
+  vars:
+    jenkins_hostname: jenkins.172.31.24.93.xip.io
+    jenkins_admin_password_file: /var/lib/jenkins/secrets/initialAdminPassword
+  roles:
+    - role: geerlingguy.java
+      become: yes
+      __java_packages:
+        - java-1.8.0-openjdk
+    - role: geerlingguy.jenkins
+      become: yes
+
+- name: Enable nginx
+  hosts: jenkins
+  tasks:
+    - name: Enable nginx repo from amazon-linux-extras
+      shell: "amazon-linux-extras enable nginx1.12"
+      become: yes
+    - name: Install nginx rpm
+      yum: name=nginx
+      become: yes
+    - name: Enable nginx service
+      service: name=nginx state=started enabled=true
+      become: yes
