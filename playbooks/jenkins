@@ -1,6 +1,7 @@
-- hosts: jenkins
+- hosts: jenkins2
   vars:
-    jenkins_hostname: jenkins.172.31.24.93.xip.io
+    jenkins_hostname: localhost
+    # jenkins_hostname: jenkins.172.31.24.93.xip.io
     jenkins_admin_password_file: /var/lib/jenkins/secrets/initialAdminPassword
   roles:
     - role: geerlingguy.java
@@ -33,3 +34,52 @@
     - name: Enable nginx service
       service: name=nginx state=started enabled=true
       become: yes
+
+- name: Configure nginx
+  hosts: jenkins
+  tasks:
+    - name: Set hostname to use
+      set_fact: 
+        nginx_jenkins_hostname: jenkins.172.31.24.93.xip.io
+
+    # - name: Configure nginx to reverse proxy jenkins part1
+
+    - name: nginx1
+      become: yes
+      register: nginx1
+      template:
+        src: templates/jenkins_default_conf.j2
+        dest: /etc/nginx/default.d/jenkins.conf
+        owner: root
+        group: root
+        mode: '0644'
+        backup: yes
+
+    - name: nginx2
+      become: yes
+      register: nginx2
+      template:
+        src: templates/jenkins_conf.j2
+        dest: /etc/nginx/conf.d/jenkins.conf
+        owner: root
+        group: root
+        mode: '0644'
+        backup: yes
+
+    - name: nginx3
+      become: yes
+      register: nginx3
+      template:
+        src: templates/nginx_conf.j2
+        dest: /etc/nginx/nginx.conf
+        owner: root
+        group: root
+        mode: '0644'
+        backup: yes
+
+    - name: Enable nginx service
+      service: name=nginx state=restarted
+      become: yes
+      when: (nginx1 is defined and nginx1.changed) or
+            (nginx2 is defined and nginx2.changed) or
+            (nginx3 is defined and nginx3.changed)
