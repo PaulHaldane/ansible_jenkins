@@ -1,19 +1,5 @@
-- hosts: jenkins2
-  vars:
-    jenkins_hostname: localhost
-    # jenkins_hostname: jenkins.172.31.24.93.xip.io
-    jenkins_admin_password_file: /var/lib/jenkins/secrets/initialAdminPassword
-  roles:
-    - role: geerlingguy.java
-      become: yes
-      __java_packages:
-        - java-1.8.0-openjdk
-    - role: geerlingguy.jenkins
-      become: yes
-
-
 - name: enable EPEL
-  hosts: jenkins
+  hosts: web
   tasks: 
     - name: install epel rpm
       become: yes
@@ -22,7 +8,7 @@
         state: installed
 
 - name: install certbot
-  hosts: jenkins
+  hosts: web
   tasks: 
     - name: install certbot rpm
       become: yes
@@ -31,7 +17,7 @@
         state: latest
 
 - name: Enable nginx
-  hosts: jenkins
+  hosts: web
   vars:
   roles:
     - role: morbidick.ansible_role_certbot
@@ -47,10 +33,7 @@
     - role: morbidick.ansible_role_nginx_vhosts
       become: yes
 
-#       set_fact: 
-#         nginx_jenkins_hostname: jenkins.18.217.36.205.xip.io
-# 
-#     # - name: Configure nginx to reverse proxy jenkins part1
+#     # - name: Configure nginx to reverse proxy app
 # 
 #     - name: nginx1
 #       become: yes
