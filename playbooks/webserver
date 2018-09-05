@@ -16,61 +16,53 @@
         name: certbot
         state: latest
 
-- name: Enable nginx
+- name: Install and configure nginx
+  hosts: web
+  roles:
+    - role: morbidick.ansible_role_nginx
+      become: yes
+      hosts: [www.18.217.36.205.xip.io, foo.18.217.36.205.xip.io]
+  tasks:
+    - name: create www-data group
+      become: yes
+      group: 
+        name: www-data
+        state: present
+        system: yes
+    - name: create www-data user
+      become: yes
+      user: 
+        name: www-data
+        comment: web content
+        group: www-data
+        system: yes
+
+- name: ensure nginx is running
+  hosts: web
+  tasks:
+    - name: start nginx
+      systemd:
+        name: nginx
+        state: started
+        enabled: True
+      when: ansible_service_mgr == "systemd"
+
+- name: Enable certbot
   hosts: web
   vars:
+    vhosts:
+      - host: www.18.217.36.205.xip.io
+        type: static
+      - host: foo.18.217.36.205.xip.io
+        type: proxy-ws
+        target: http://127.0.0.1:5601/
+    nginx_vhosts: "{{ vhosts }}"
+    certbot_certs: "{{ vhosts }}"
   roles:
     - role: morbidick.ansible_role_certbot
       become: yes
       vars:
         certbot_mail: paul.haldane@gmail.com
-        certbot_certs:
-          - host: www.18.217.36.205.xip.io
-          - host: foo.18.217.36.205.xip.io
-            mail: paul.haldane+foo@gmail.com
-    - role: morbidick.ansible_role_nginx
-      become: yes
+        certbot_certs: "{{ vhosts }}"
     - role: morbidick.ansible_role_nginx_vhosts
       become: yes
-
-#     # - name: Configure nginx to reverse proxy app
-# 
-#     - name: nginx1
-#       become: yes
-#       register: nginx1
-#       template:
-#         src: templates/jenkins_default_conf.j2
-#         dest: /etc/nginx/default.d/jenkins.conf
-#         owner: root
-#         group: root
-#         mode: '0644'
-#         backup: yes
-# 
-#     - name: nginx2
-#       become: yes
-#       register: nginx2
-#       template:
-#         src: templates/jenkins_conf.j2
-#         dest: /etc/nginx/conf.d/jenkins.conf
-#         owner: root
-#         group: root
-#         mode: '0644'
-#         backup: yes
-# 
-#     - name: nginx3
-#       become: yes
-#       register: nginx3
-#       template:
-#         src: templates/nginx_conf.j2
-#         dest: /etc/nginx/nginx.conf
-#         owner: root
-#         group: root
-#         mode: '0644'
-#         backup: yes
-# 
-#     - name: Enable nginx service
-#       service: name=nginx state=restarted
-#       become: yes
-#       when: (nginx1 is defined and nginx1.changed) or
-#             (nginx2 is defined and nginx2.changed) or
-#             (nginx3 is defined and nginx3.changed)

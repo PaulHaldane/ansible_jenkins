@@ -1,2 +1,2 @@
-mgt ansible_ssh_host=127.0.0.1 ansible_ssh_user=ec2-user ansible_ssh_private_key_file=../ec2-user.key
-web ansible_ssh_host=127.0.0.1 ansible_ssh_user=ec2-user ansible_ssh_private_key_file=../ec2-user.key
+mgt ansible_ssh_host=127.0.0.1 ansible_ssh_user=ec2-user ansible_ssh_private_key_file=./ec2-user.key
+web ansible_ssh_host=127.0.0.1 ansible_ssh_user=ec2-user ansible_ssh_private_key_file=./ec2-user.key
